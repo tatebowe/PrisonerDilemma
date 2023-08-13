@@ -1,0 +1,175 @@
+### prisoner dilemma game, non-zero-sum
+# Golden rule, silver ruler, iron rule, brass rule, tit-for-tat
+# innocent (collaborate) is 1, while guilty (defect) is 0
+import random
+class PrisonerDilemma():
+    def __init__(self, player1, player2):
+        self.player1 = player1
+        self.player2 = player2
+        self.move1 = None
+        self.move2 = None
+
+    #get user input or tactic strategy
+    def get_moves(self):
+        self.move1 = self.player1.strategy()
+        self.move2 = self.player2.strategy()
+        return self.move1, self.move2
+    
+    #decide winners and losers
+    def prisoner(self):
+        if self.move1 == 1 and self.move2 == 1:
+            self.player1.game_played(1)
+            self.player2.game_played(1)
+            print(f'{self.player1.name} and {self.player2.name} win!')
+        elif self.move1 == 1 and self.move2 == 0:
+            self.player1.game_played(0)
+            self.player2.game_played(1)
+            print(f'{self.player1.name} chose innocent, {self.player2.name} wins')
+        elif self.move1 == 0 and self.move2 == 1:
+            self.player1.game_played(1)
+            self.player2.game_played(0)
+            print(f'{self.player2.name} chose innocent, {self.player1.name} wins')
+        else:
+            self.player1.game_played(0)
+            self.player2.game_played(0)
+            print(f'Both players chose guilty, both players lose')
+
+    #add opponents moves to list
+    def assign_moves(self):
+        self.player1.get_opponent_moves(self.move2)
+        self.player2.get_opponent_moves(self.move1)
+    
+    def play_game(self):
+        print('Let\'s play Prisoner Dilemma')
+        print('''If both players choose innocent, both players win\n
+If one player chooses guilty while the other chooses innocent, the player that chooses guilty wins\n
+If both players choose guilty, both players lose\n''')
+        self.get_moves()
+        self.prisoner()
+        self.assign_moves()
+        
+        
+#tactic class, different philosophies of morality will have different strategies
+class Tactic():
+    def __init__(self):
+        self.name = 'Strategy'
+        self.score = 0
+        self.wins = 0
+        self.number_games = 0
+        self.moves = []
+        self.opponent_moves = []
+        self.rate = 0
+
+    def strategy(self):
+        pass
+
+    #increase number of games, add score/win from playing games
+    def game_played(self, score):
+        self.score += score
+        if score == 1:
+            self.wins += 1
+        self.number_games += 1
+        return
+    
+    def win_rate(self):
+        if self.number_games <= 0:
+            return print('No games played')
+        else:
+            self.rate = self.wins / float(self.number_games) * 100
+        return self.rate
+    
+    def get_score(self):
+        self.win_rate()
+        return print(f'{self.name} after {self.number_games} games played had a score of {self.score} with {self.wins} wins and a win-rate of: {self.rate}%')
+    
+    #useful for adding opponent moves to list, strategies can decide input off of opponents previous x moves
+    def get_opponent_moves(self, opp):
+        return self.opponent_moves.append(opp)
+    
+#Do unto others as you would have them do unto you
+class GoldenRule(Tactic):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Golden Rule Strategy'
+
+    def strategy(self):
+        return 1
+#Do unto others as you like, before they do it unto you
+class IronRule(Tactic):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Iron Rule Strategy'
+
+    def strategy(self):
+        return 0
+#Do not do unto others what you would not have them do unto you    
+class SilverRule(Tactic):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Silver Rule Strategy'
+
+    def strategy(self):
+        if 1 in self.opponent_moves:
+            return 1
+        else:
+            return 0
+#Do unto others as they do unto you       
+class BrassRule(Tactic):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Brass Rule Strategy'
+
+    def strategy(self):
+        if 0 in self.opponent_moves:
+            randomint = random.randrange(100)
+            if randomint <= 75:
+                return 0
+        else:
+            return 1
+#cooporate at first, then do unto others as they do unto you
+class Tit_For_Tat(Tactic):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Tit For Tat Strategy'
+
+    def strategy(self):
+        if len(self.opponent_moves) > 10:
+            return self.opponent_moves[-1]
+        else:
+            return 1
+
+class RandomTactic(Tactic):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Random Tactic'
+    
+    def strategy(self):
+        return random.randrange(0, 2)
+
+class UserTactic(Tactic):
+    def __init__(self, name = None):
+        super().__init__()
+        self.name = input('Please enter name: ') if name is None else name
+
+    def strategy(self):
+        choice = int(input('''Please select:\n
+1 for Innocent
+0 for Guilty\n'''))
+        if choice in range(0, 2):
+            return choice
+
+user = UserTactic('Tate')
+tit = Tit_For_Tat()
+brass = BrassRule()
+iron = IronRule()
+test = RandomTactic()
+gold = GoldenRule()
+silver = SilverRule()
+game = PrisonerDilemma(test, tit)
+
+
+for i in range(1000):
+    game.play_game()
+
+test.get_score()
+tit.get_score()
